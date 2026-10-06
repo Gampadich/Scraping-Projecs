@@ -21,7 +21,7 @@
    cd auto-ria-scraping
 Install dependencies:
 
-pip install playwright openpyxl
+pip install playwright openpyxl pandas
 playwright install chromium
 Usage
 Update the search URL in main.py and run the script:
