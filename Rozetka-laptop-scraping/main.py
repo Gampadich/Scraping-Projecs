@@ -1,5 +1,4 @@
 import asyncio
-from xml.sax.handler import all_properties
 
 from playwright.async_api import async_playwright
 from sqlDatabase import setupSQL, deletePages, setPages, getPages
