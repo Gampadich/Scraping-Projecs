@@ -1,0 +1,5 @@
+productsData = {
+    'URL': [],
+    'Title': [],
+    'Price': []
+}
