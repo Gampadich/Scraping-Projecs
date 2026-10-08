@@ -10,7 +10,7 @@ async def scrape():
 
     # Launch Playwright browser session with customized User-Agent
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+        browser = await p.chromium.launch(headless=False)
         context = await browser.new_context(
             user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36')
         page = await context.new_page()
@@ -35,9 +35,16 @@ async def scrape():
                     url = await titleElem.get_attribute('href') if titleElem else None
 
                     costElem = await product.query_selector('div[class="price leading-none font-bold color-red"]')
+                    alternativeCostElem = await product.query_selector('div[class="price leading-none font-bold"]')
 
-                    cost = await costElem.inner_text() if costElem else None
+                    if costElem:
+                        cost = await costElem.inner_text()
+                    elif alternativeCostElem:
+                        cost = await alternativeCostElem.inner_text()
+                    else:
+                        cost = None
 
+                    print(f'Saved product: {title}, {cost}')
                     productsData['URL'].append(url)
                     productsData['Title'].append(title)
                     productsData['Price'].append(cost)
@@ -49,7 +56,7 @@ async def scrape():
                     # Navigate to next page, update DB state, and export current page data
                     await nextPageBtn.click()
                     await page.wait_for_load_state('networkidle')
-                    await page.wait_for_timeout(2000)
+                    await page.wait_for_timeout(3000)
         except NameError:
             print(f'Error: {NameError}')
 
