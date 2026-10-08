@@ -1,28 +1,70 @@
-# 💻 Rozetka Laptop Web Scraper
+# 🚗 Auto.ria Vehicle Web Scraper
 
-An asynchronous Python web scraper built with **Playwright** and **Pandas** for extracting laptop listings from **Rozetka**.
+An object-oriented Python web scraper built with **Playwright** and **Pandas** for extracting used vehicle listings from the **Auto.ria** marketplace.
 
-The scraper uses browser automation with stealth capabilities, automatically handles pagination, cleans raw price data, removes duplicate listings, and exports the results into a structured CSV file.
+The scraper navigates through search results, handles dynamic pagination using the **"Show More"** button, extracts key vehicle specifications, cleans the collected data, removes duplicates, and exports the final dataset to an Excel (`.xlsx`) file.
 
 ---
 
 ## 🛠️ Tech Stack
 
 * **Python 3.10+**
-* **Playwright** — asynchronous browser automation
-* **playwright-stealth** — helps reduce bot-detection issues
-* **Pandas** — data cleaning, transformation, and CSV export
+* **Playwright** — synchronous browser automation and dynamic page interaction
+* **Pandas** — data processing, cleaning, duplicate removal, and dataset management
+* **OpenPyXL** — Excel (`.xlsx`) file generation
+
+---
+
+## ✨ Features
+
+* **Object-Oriented Architecture**
+  The scraper is encapsulated in a reusable `Scraper` class, making it easy to customize and extend.
+
+* **Dynamic Pagination**
+  Automatically detects and clicks the **"Show More"** button to load additional vehicle listings.
+
+* **Robust Data Extraction**
+  Safely handles listings with missing or incomplete information without causing `IndexError` exceptions.
+
+* **Data Sanitization**
+  Cleans whitespace, non-breaking spaces (`\xa0`), and other formatting inconsistencies.
+
+* **Duplicate Removal**
+  Automatically removes duplicate vehicle listings from the resulting dataset.
+
+* **Missing Data Handling**
+  Handles unavailable attributes and fills missing values where necessary.
+
+* **Excel Export**
+  Saves the collected vehicle data directly into a structured `.xlsx` spreadsheet.
+
+---
+
+## 📊 Extracted Data
+
+The scraper collects the following information from each vehicle listing:
+
+| Attribute           | Description                          |
+| ------------------- | ------------------------------------ |
+| `URL`               | Direct link to the vehicle listing   |
+| `Model`             | Vehicle brand and model              |
+| `Generation`        | Model generation or year information |
+| `Cost`              | Vehicle price                        |
+| `Mileage`           | Recorded vehicle mileage             |
+| `Gearbox`           | Transmission type                    |
+| `Fuel Type`         | Engine/fuel type                     |
+| `Location`          | Seller's city or region              |
+| `Short Description` | Short seller description             |
+| `Time`              | Listing creation or update timestamp |
 
 ---
 
 ## 📂 Project Structure
 
 ```text
-Rozetka-laptop-scraping/
+AutoRia-Vehicle-Scraper/
 │
-├── main.py              # Main scraping script and Playwright logic
-├── csvDatabase.py       # Data cleaning and CSV export
-├── producsData.py       # In-memory product data storage
+├── main.py              # Main scraper and Scraper class
 ├── requirements.txt     # Project dependencies
 └── README.md            # Project documentation
 ```
@@ -34,8 +76,8 @@ Rozetka-laptop-scraping/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/Rozetka-laptop-scraping.git
-cd Rozetka-laptop-scraping
+git clone https://github.com/your-username/AutoRia-Vehicle-Scraper.git
+cd AutoRia-Vehicle-Scraper
 ```
 
 ### 2. Create a virtual environment
@@ -44,7 +86,7 @@ cd Rozetka-laptop-scraping
 python -m venv .venv
 ```
 
-Activate it depending on your operating system:
+Activate the environment:
 
 **Windows (PowerShell):**
 
@@ -60,19 +102,19 @@ source .venv/bin/activate
 
 ### 3. Install dependencies
 
-If `requirements.txt` is already configured:
+If the project contains a `requirements.txt` file:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Alternatively:
+Alternatively, install the dependencies manually:
 
 ```bash
-pip install playwright playwright-stealth pandas
+pip install playwright pandas openpyxl
 ```
 
-### 4. Install Playwright browsers
+### 4. Install Playwright Chromium
 
 ```bash
 playwright install chromium
@@ -82,85 +124,117 @@ playwright install chromium
 
 ## 💻 Usage
 
-Run the scraper with:
+Run the main scraper:
 
 ```bash
 python main.py
 ```
 
-The script will launch Chromium and begin collecting laptop listings from Rozetka.
+The scraper will open Chromium, navigate to the configured Auto.ria search page, collect vehicle listings, and save the results to an Excel file.
 
 ---
 
-## ⚙️ How It Works
+## ⚙️ Customizing the Scraper
 
-The scraper follows this workflow:
+The `Scraper` class accepts a target search URL and an output filename.
 
-1. **Launches Chromium** using Playwright.
-2. **Applies stealth techniques** to reduce bot-detection issues.
-3. **Opens Rozetka laptop catalog pages** according to the configured filters.
-4. **Extracts product information**, including:
+You can use it to scrape different vehicle categories, regions, brands, or price ranges available on Auto.ria.
 
-   * Product URL
-   * Product title
-   * Product price
-5. **Navigates through multiple pages** automatically.
-6. **Cleans price values** by removing currency symbols, spaces, and other non-numeric characters.
-7. **Removes duplicate products** from the collected dataset.
-8. **Exports the final dataset** to a CSV file.
+### Example
 
----
+```python
+from main import Scraper
 
-## 🔎 Supported Filters
+scraper = Scraper(
+    url="YOUR_TARGET_AUTO_RIA_SEARCH_URL",
+    filename="my_custom_cars.xlsx"
+)
 
-The scraper can work with configured Rozetka catalog filters such as:
-
-* **Brand**
-* **SSD capacity**
-* **Price range**
-
-The exact filters depend on the URLs and selectors configured in `main.py`.
-
----
-
-## 📊 Output
-
-After the scraping process finishes, the collected data is saved to:
-
-```text
-rozetka-laptop-scraped.csv
+scraper.scrape()
 ```
 
-Example:
+### Parameters
 
-| URL                                                        | Title                                 | Price |
-| ---------------------------------------------------------- | ------------------------------------- | ----: |
-| [Rozetka](https://rozetka.com.ua/ua/496860584/p496860584/) | Ноутбук HP Pavilion 15-p258nl / 15.6" | 16446 |
-| [Rozetka](https://rozetka.com.ua/ua/609074099/p609074099/) | Lenovo ThinkPad X13 Yoga G1 i7-10510U | 17999 |
+| Parameter  | Description                   |
+| ---------- | ----------------------------- |
+| `url`      | Auto.ria search results URL   |
+| `filename` | Name of the output Excel file |
 
 ---
 
-## 📄 CSV Structure
+## 🔄 Scraping Workflow
 
-The generated CSV contains three main columns:
+The scraper follows the following process:
 
-| Column  | Description                     |
-| ------- | ------------------------------- |
-| `URL`   | Direct link to the product page |
-| `Title` | Product name                    |
-| `Price` | Cleaned numeric product price   |
+```text
+Start
+  │
+  ▼
+Open Auto.ria
+  │
+  ▼
+Load search results
+  │
+  ▼
+Extract vehicle listings
+  │
+  ▼
+Parse vehicle attributes
+  │
+  ▼
+Click "Show More"
+  │
+  ▼
+More listings available?
+  │
+  ├── Yes ──► Continue scraping
+  │
+  └── No
+        │
+        ▼
+Clean collected data
+        │
+        ▼
+Remove duplicates
+        │
+        ▼
+Export to XLSX
+        │
+        ▼
+       Done
+```
+
+---
+
+## 📄 Output
+
+After the scraping process is completed, the collected data is exported to an Excel file.
+
+For example:
+
+```text
+my_custom_cars.xlsx
+```
+
+The resulting spreadsheet contains structured records such as:
+
+| Model         | Generation         |     Cost |    Mileage | Gearbox   | Fuel Type | Location |
+| ------------- | ------------------ | -------: | ---------: | --------- | --------- | -------- |
+| Example Car   | Example Generation | 15,000 $ | 120,000 km | Automatic | Diesel    | Kyiv     |
+| Example Car 2 | Example Generation | 18,500 $ |  95,000 km | Manual    | Petrol    | Lviv     |
 
 ---
 
 ## ⚠️ Notes
 
 * Make sure **Chromium** is installed through Playwright before running the scraper.
-* Website structure and CSS selectors may change over time, which can require updates to the scraper.
-* Scraping behavior should comply with **Rozetka's terms of use and applicable policies**.
-* Running the scraper in non-headless mode allows you to visually monitor the browser while it is collecting data.
+* Auto.ria may change its HTML structure or CSS selectors, which can require updates to the scraper.
+* Some listings may contain incomplete information. The scraper is designed to handle missing fields safely.
+* Scraping should comply with **Auto.ria's terms of use** and applicable website policies.
+* Large scraping tasks may take some time because listings are loaded dynamically.
 
 ---
 
 ## 📜 License
 
-This project is intended for educational and research purposes.
+This project is intended for **educational and research purposes**.
