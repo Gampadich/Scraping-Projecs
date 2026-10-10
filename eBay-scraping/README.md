@@ -1,287 +1,129 @@
-# eBay Laptop Scraper
+# eBay Web Scraper
 
-An asynchronous Python scraper for collecting laptop listings from eBay using Playwright, Scrape.do proxy rendering, SQLite page tracking, and Google Sheets integration.
+A Python-based web scraper built with **Playwright, Requests, and Pandas** to collect laptop product listings, specifications, pricing, and seller information from eBay search results.
 
-The scraper automatically navigates through eBay pagination, extracts laptop product information, stores the current scraping progress in SQLite, and uploads all collected data directly into Google Sheets.
+## Features
 
----
+- **Proxy Integration** — Uses the `scrape.do` API proxy service to retrieve target pages and handle website access restrictions.
+- **Environment Configuration** — Securely stores API tokens in a local `.env` file using `python-dotenv`.
+- **Comprehensive Data Extraction** — Collects product titles, conditions, prices, availability, shipping costs, seller locations, sales volume, ratings, refurbished status, and product tags.
+- **Data Processing** — Uses Pandas to process collected information and remove duplicate records.
+- **CSV Export** — Saves structured product data to a local `products.csv` file.
 
-# Features
+## Tech Stack
 
-- Async scraping with Playwright
-- Dynamic page rendering using Scrape.do
-- Automatic pagination support
-- SQLite database for saving current page progress
-- Google Sheets integration
-- Resume scraping from the last saved page
-- Extracts detailed product information:
-  - Product URL
-  - Title
-  - Condition
-  - Price
-  - Buy option
-  - Delivery cost
-  - Seller location
-  - Sold count
-  - Seller feedback
-  - Refurbished status
-  - Additional listing information
+- **Python 3.10+**
+- **Playwright** — Browser automation and page interaction.
+- **Requests** — HTTP requests and communication with the proxy API.
+- **Pandas** — Data processing, cleaning, and CSV export.
+- **python-dotenv** — Environment variable management.
+- **scrape.do** — Proxy and page-rendering service.
 
----
+## Requirements
 
-# Project Structure
+- Python 3.10 or newer
+- A `scrape.do` API token
+- An internet connection
 
-```bash
-.
-├── main.py
-├── sqlDatabase.py
-├── googleSheetsDatabase.py
-├── pages.db
-├── credentials.json
-├── .env
-└── README.md
-```
+## Installation & Setup
 
----
+### 1. Clone the Repository
 
-# Requirements
-
-Install all required dependencies:
+Clone the repository and navigate to the project directory.
 
 ```bash
-pip install playwright python-dotenv requests gspread google-auth
+git clone <repository-url>
+cd <project-directory>
 ```
 
-Install Playwright browser binaries:
+### 2. Install Dependencies
+
+Install the required Python packages:
 
 ```bash
-playwright install
+pip install playwright requests pandas python-dotenv
 ```
 
----
+### 3. Install Playwright Browser
 
-# Environment Variables
+Install Chromium for Playwright:
 
-Create a `.env` file in the root directory:
+```bash
+playwright install chromium
+```
+
+## Environment Variables
+
+Create a `.env` file in the root directory of the project and add your `scrape.do` API token:
 
 ```env
-PROXY_API=your_scrape_do_token
+PROXY_API=your_scrape_do_token_here
 ```
 
----
+Replace `your_scrape_do_token_here` with your actual API token.
 
-# Google Sheets Setup
+**Important:** Never commit your `.env` file or expose your API token in a public repository. Add `.env` to your `.gitignore` file.
 
-## 1. Create Google Cloud Service Account
-
-1. Open Google Cloud Console
-2. Create a new project
-3. Enable:
-   - Google Sheets API
-   - Google Drive API
-4. Create a Service Account
-5. Download the service account credentials JSON file
-
-Rename the downloaded file to:
-
-```bash
-credentials.json
-```
-
-Place it in the project root directory.
-
----
-
-## 2. Share Your Spreadsheet
-
-Share your Google Spreadsheet with the service account email found inside `credentials.json`.
-
-Example:
+## Project Structure
 
 ```text
-my-service-account@project.iam.gserviceaccount.com
+eBay-Web-Scraper/
+├── main.py
+├── api.py
+├── addToObject.py
+├── data.py
+├── csvDB.py
+├── .env
+├── .gitignore
+└── products.csv
 ```
 
----
+### File Descriptions
 
-## 3. Update Spreadsheet ID
-
-Inside `googleSheetsDatabase.py` replace:
-
-```python
-spreadsheetID = 'YOUR_SPREADSHEET_ID'
-```
-
-with your actual Google Spreadsheet ID.
-
----
-
-# Database
-
-The project uses SQLite (`pages.db`) to store the current pagination state.
-
-This allows the scraper to:
-
-- Resume scraping after interruption
-- Continue from the last processed page
-- Avoid restarting from page 1
-
----
-
-# How It Works
-
-## main.py
-
-Main scraper logic.
-
-### Workflow
-
-1. Initialize SQLite database
-2. Load environment variables
-3. Launch Playwright browser
-4. Fetch rendered HTML through Scrape.do
-5. Parse eBay product cards
-6. Extract product information
-7. Upload data to Google Sheets
-8. Save current page number in SQLite
-9. Continue until no next page exists
-
----
-
-## sqlDatabase.py
-
-Handles SQLite operations:
-
-- Create database and table
-- Save current page number
-- Retrieve saved page number
-- Delete page data after completion
-
----
-
-## googleSheetsDatabase.py
-
-Handles Google Sheets integration using the Google Sheets API.
-
-Uploads all scraped products directly into the spreadsheet.
-
----
-
-# Extracted Product Data
-
-Each product contains:
-
-| Field | Description |
+| File | Description |
 |---|---|
-| Product URL | Direct eBay listing URL |
-| Title | Product title |
-| Condition | Product condition |
-| Cost | Product price |
-| Buy Option | Auction / Buy It Now |
-| Delivery Cost | Shipping price |
-| Location | Seller location |
-| Sold | Number of sold items |
-| Positive Reply | Seller feedback |
-| Refurbished | Refurbished status |
-| Extra | Additional information |
+| `main.py` | Main controller responsible for browser initialization, page navigation, product parsing, and pagination. |
+| `api.py` | Retrieves page HTML through the `scrape.do` proxy service. |
+| `addToObject.py` | Helper module that adds extracted product attributes to the data storage structure. |
+| `data.py` | Contains the data structure used to store collected product information. |
+| `csvDB.py` | Processes collected data using Pandas and exports the results to a CSV file. |
+| `.env` | Stores environment variables, including the proxy API token. |
+| `products.csv` | Output file containing the scraped product listings. |
 
----
+## Usage
 
-# Running the Scraper
+Run the main scraper script from the project directory:
 
 ```bash
 python main.py
 ```
 
----
+The scraper will retrieve product listings, extract the configured attributes, process the collected data, and save the results to `products.csv`.
 
-# Example Output
+## Output Data
 
-```python
-[
-    'https://www.ebay.com/item/123456',
-    'Dell Latitude 5520',
-    'Used',
-    '$299.99',
-    'Buy It Now',
-    'Free shipping',
-    'United States',
-    '15 sold',
-    '98.7% positive feedback',
-    False,
-    None
-]
-```
+Depending on the available information on eBay, the exported dataset may contain:
 
----
+- Product title
+- Product condition
+- Price
+- Availability
+- Shipping cost
+- Seller location
+- Sales volume
+- Seller or product ratings
+- Refurbished status
+- Product tags
 
-# Technologies Used
+The exact fields depend on the extraction logic implemented in the project.
 
-- Python
-- AsyncIO
-- Playwright
-- SQLite
-- Google Sheets API
-- gspread
-- Scrape.do
+## Notes
 
----
+- Website layouts and page structures may change, requiring updates to the scraping logic.
+- API usage may be subject to `scrape.do` plan limits and pricing.
+- Respect eBay's applicable terms, robots.txt directives, and rate limits.
+- Keep API credentials private and use environment variables for sensitive configuration.
 
-# Notes
+## License
 
-The scraper uses:
-
-```python
-render=true
-```
-
-inside Scrape.do requests to properly render dynamic eBay pages.
-
-The browser currently runs in non-headless mode:
-
-```python
-browser = await p.chromium.launch(headless=False)
-```
-
-To run the scraper in background mode:
-
-```python
-browser = await p.chromium.launch(headless=True)
-```
-
----
-
-# Possible Improvements
-
-- Add rotating proxies
-- Add retry/error handling
-- Save data as CSV or JSON
-- Docker support
-- Multi-category scraping
-- Logging system
-- Duplicate filtering
-- Async batch Google Sheets uploads
-
----
-
-# Disclaimer
-
-This project is intended for educational purposes only.
-
-Make sure your scraping activity complies with:
-
-- eBay Terms of Service
-- robots.txt policies
-- Local laws and regulations
-
----
-
-# License
-
-MIT License
-
----
-
-# Author
-
-Built with Python, Playwright, SQLite, and Google Sheets automation.
+See the `LICENSE` file for licensing information.
