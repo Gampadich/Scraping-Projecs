@@ -1,3 +1,4 @@
+# Central data repository structure holding lists for each scraped column attribute
 products = {
     'URL': [],
     'Title': [],

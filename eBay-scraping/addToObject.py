@@ -1,6 +1,10 @@
 from data import products
 
 def add_to_object(url, title, productCondition, cost, canBuy, deliveryCost, location, sold, positiveReply, refurbish, extra):
+    """
+    Appends extracted product attributes to their respective lists
+    inside the centralized products dictionary container.
+    """
     products['URL'].append(url)
     products['Title'].append(title)
     products['Product Condition'].append(productCondition)
