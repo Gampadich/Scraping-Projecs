@@ -1,85 +1,100 @@
-# Amazon PC Market Scraper
+# Amazon Web Scraper
 
-A high-performance, asynchronous Python tool designed for automated data extraction from Amazon. The project is optimized for monitoring the computer market, ensuring reliable data delivery directly to cloud storage.
+An asynchronous Python web scraper built with **Playwright** and **Pandas**, designed to extract product search results from Amazon.
 
----
+## 🚀 Features
 
-## Key Functionalities
+* **Anti-Bot Handling** — Uses `playwright-stealth` and customized browser contexts (User-Agent, viewport, and locale) to reduce bot detection and handle Amazon CAPTCHA pages ("Dogs of Amazon").
+* **Asynchronous Execution** — Leverages `asyncio` and `playwright.async_api` for efficient browser automation.
+* **Dynamic Data Extraction** — Collects product URLs, titles, specifications, options, and ratings across multiple search result pages.
+* **Automatic Pagination** — Navigates through multiple pages of Amazon search results.
+* **Data Export** — Processes the collected data using Pandas and exports it to a structured CSV file with UTF-8-SIG encoding.
 
-### State Persistence & Session Management
+## 🛠️ Tech Stack
 
-The scraper implements a robust state management system using SQLite. It tracks the scraping progress by storing the current page index in a local database (`pages.db`). This allows the script to:
+* **Python 3.10+**
+* **Playwright** — Browser automation and web scraping
+* **playwright-stealth** — Stealth techniques for browser automation
+* **Pandas** — Data processing and CSV export
+* **asyncio** — Asynchronous execution
 
-- Resume from the exact page after an interruption.
-- Ensure no data is lost during long-running sessions.
-- Automatically reset progress once the full search result is processed.
+## 📦 Requirements
 
-### Cloud Integration (Google Sheets API)
+Make sure you have the following installed:
 
-Unlike standard scrapers that save files locally, this tool features real-time cloud synchronization:
+* Python 3.10 or newer
+* pip
 
-- **Batch Data Transmission:** To stay within Google API quotas (300 requests/min), the tool collects an entire page of data and uploads it in a single batch.
-- **Service Account Authentication:** Secure connection using Google Cloud service accounts for seamless background operation.
+## ⚙️ Installation
 
-### Reliable Data Extraction
-
-- **Dynamic Content Handling:** Powered by Playwright to handle Amazon's complex JavaScript-rendered search results.
-- **Data Sanitization:** Automatically cleans and structures product titles, variation options (`options`), star ratings, and price strings.
-- **Anti-Bot Mitigation:** Implements custom User-Agents and human-like delays (`wait_for_timeout`) to maintain a low profile.
-
----
-
-## Technical Architecture
-
-The project follows a modular functional approach, separating concerns into specialized modules:
-
-| Module | Responsibility |
-|---|---|
-| `main.py` | Orchestrates the browser automation and scraping flow |
-| `sqlDatabase.py` | Handles all low-level database operations for state persistence |
-| `googleSheetsDatabase.py` | Manages the API connection and batch writing logic |
-
-## Tech Stack
-
-- **Python 3.12+**
-- **Playwright (Chromium)** — Asynchronous browser automation.
-- **gspread & google-auth** — Google Sheets API integration.
-- **SQLite3** — Local state management.
-- **Asyncio** — High-concurrency execution.
-
----
-
-## Installation and Setup
-
-**1. Install required packages:**
+### 1. Clone the repository
 
 ```bash
-pip install playwright gspread google-auth
+git clone https://github.com/your-username/Amazon-Scraper.git
+cd Amazon-Scraper
 ```
 
-**2. Install browser binaries:**
+### 2. Install dependencies
+
+```bash
+pip install playwright playwright-stealth pandas
+```
+
+### 3. Install Playwright browser binaries
 
 ```bash
 playwright install chromium
 ```
 
-**3. API Configuration:**
+## 📁 Project Structure
 
-- Place your Google Service Account `credentials.json` in the root folder.
-- Share your target Google Sheet with the service account's email.
+```text
+Amazon-Scraper/
+├── main.py          # Main scraping engine
+├── dataObject.py    # Dictionary container for product data
+├── csvDB.py         # CSV export utility using Pandas
+└── products.csv     # Generated dataset (created after execution)
+```
 
-**4. Run the script:**
+### File Description
+
+* **`main.py`** — The main scraping engine. Handles browser contexts, page interactions, element selection, product extraction, and pagination.
+* **`dataObject.py`** — Contains the dictionary structure used to store scraped product information.
+* **`csvDB.py`** — Processes the collected product data and exports it to a CSV file using Pandas.
+* **`products.csv`** — The output file containing the extracted product dataset.
+
+## ▶️ Usage
+
+Run the main scraper script:
 
 ```bash
 python main.py
 ```
 
----
+The scraper will:
 
-## Usage Notes
+1. Launch a Chromium browser.
+2. Navigate to Amazon PC search results.
+3. Extract product information, including URLs, titles, specifications, options, and ratings.
+4. Navigate through subsequent pages of search results.
+5. Process the collected data using Pandas.
+6. Export the results to `products.csv`.
 
-The scraper initializes by verifying the local SQLite state. If a previous session exists, it navigates directly to the last saved page. Data is committed to Google Sheets only after a full page is successfully parsed, ensuring data integrity. Once the final page is reached, the local session is cleared automatically.
+## 📊 Output
 
----
+The scraper generates a `products.csv` file containing the extracted product data.
 
-*Developed for real-time e-commerce analytics and price monitoring.*
+The CSV file uses **UTF-8-SIG encoding**, helping ensure compatibility with spreadsheet applications such as Microsoft Excel.
+
+## ⚠️ Disclaimer
+
+This project is intended for educational and personal use.
+
+* Respect Amazon's [Conditions of Use](https://www.amazon.com/gp/help/customer/display.html?nodeId=GLSBYFE9MGKKQXXM).
+* Review the website's applicable policies before scraping.
+* Avoid excessive requests that could affect the website's performance.
+* CAPTCHA handling and stealth techniques do not guarantee successful access.
+
+## 📄 License
+
+No license has been specified for this project. Add a license file if you intend to distribute or publish the source code.

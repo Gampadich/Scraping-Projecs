@@ -1,73 +1,82 @@
 import asyncio
 from playwright.async_api import async_playwright
-from sqlDatabase import setupSQL, deletePages, setPages, getPages
-from googleSheetsDatabase import addRowIntoGoogleSheets
+from playwright_stealth import Stealth
+from dataObject import products
+from csvDB import convertToCSV
 
 async def scrape():
-    await setupSQL()
-    pages = await getPages()
-    if pages == 1:
-        url = 'https://www.amazon.com/s?k=PCs'
-    else:
-        url = f'https://www.amazon.com/s?k=PCs&page={pages}'
+    # Target Amazon search URL for PCs
+    url = 'https://www.amazon.com/s?k=PCs'
+
     async with async_playwright() as p:
+        # Target Amazon search URL for PCs
         browser = await p.chromium.launch(headless=False)
-        context = await browser.new_context(user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36')
+
+        # Configure browser context with custom User-Agent, viewport size, and locale
+        context = await browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+            viewport={'width': 1920, 'height': 1080},
+            locale="en-US"
+        )
+
+        # Initialize stealth module to bypass bot detection mechanisms
+        stealth = Stealth()
         page = await context.new_page()
+        stealth.use_async(page)
+
+        # Navigate to the target URL
         await page.goto(url)
 
-        allProducts = await page.query_selector_all('div[data-component-type="s-search-result"]')
+        try:
+            # Main loop for multi-page scraping
+            while True:
+                # Retrieve all product result cards on the current page
+                allProducts = await page.query_selector_all('div[data-component-type="s-search-result"]')
 
-        while True:
-            productsData = []
+                for product in allProducts:
+                    # Query title element and extract its href attribute and inner text
+                    titleObject = await product.query_selector(
+                        'a[class="a-link-normal s-line-clamp-3 s-link-style a-text-normal"]')
+                    productURL = await titleObject.get_attribute('href') if titleObject else None
+                    title = await titleObject.inner_text() if titleObject else None
 
-            for product in allProducts:
-                titleObject = await product.query_selector(
-                    'a[class="a-link-normal s-line-clamp-2 puis-line-clamp-3-for-col-4-and-8 s-link-style a-text-normal"]')
-                url = await titleObject.get_attribute('href')
-                title = await titleObject.inner_text()
-                optionsObject = await product.query_selector(
-                    'span[class="a-size-small s-variation-options-text s-variations-options-justify-content"]')
+                    # Query options/specs element and extract inner text
+                    optionsObject = await product.query_selector(
+                        'span[class="a-size-base a-color-secondary title-differentiators s-line-clamp-1 a-text-normal"]')
+                    options = await optionsObject.inner_text() if optionsObject else None
 
-                if optionsObject:
-                    options = await optionsObject.inner_text()
-                else:
-                    options = "Haven`t options yet"
+                    # Query rating element and extract inner text
+                    rateObject = await product.query_selector('span[class="a-size-small a-color-base"]')
+                    rate = await rateObject.inner_text() if rateObject else None
 
-                rateObject = await product.query_selector('span[class="a-size-small a-color-base"]')
+                    # Process product URL and append full link or None to global dictionary
+                    if productURL is not None:
+                        products['URL'].append('https://www.amazon.com' + productURL)
+                        print(f'Saved data: {'https://www.amazon.com' +  productURL}, {title}, {options}, {rate}')
+                    else:
+                        products['URL'].append(productURL)
+                        print(f'Saved data: {productURL}, {title}, {options}, {rate}')
 
-                if rateObject:
-                    rate = await rateObject.inner_text()
-                else:
-                    rate = "Haven`t rate yet"
+                    # Append extracted fields to global products data structure
+                    products['Title'].append(title)
+                    products['Options'].append(options)
+                    products['Rate'].append(rate)
 
-                costObject = await product.query_selector('span[class="a-color-base"]')
+                # Locate the pagination "Next" button and trigger click to go to the next page
+                nextBtn = await page.query_selector('a.s-pagination-next')
 
-                if costObject:
-                    cost = await costObject.inner_text()
-                else:
-                    cost = "Haven`t cost yet"
-
-                productData = ['https://www.amazon.com' + url, title, options, rate, cost]
-                print(productData)
-                print(productsData)
-                productsData.append(productData)
-                await page.wait_for_timeout(2000)
-
-            nextBtn = await page.query_selector('a[class="s-pagination-item s-pagination-next s-pagination-button s-pagination-button-accessibility s-pagination-separator"]')
-
-            if nextBtn:
                 await nextBtn.click()
-                pages = await getPages()
-                print(pages)
-                await setPages(pages + 1)
-                await addRowIntoGoogleSheets(productsData)
-            else:
-                await deletePages()
-                break
+                await page.wait_for_timeout(3000)
 
+        except Exception as e:
+            # Output runtime exception details
+            print(e)
 
-        await page.wait_for_timeout(5000)
-        await browser.close()
+        finally:
+            # Export collected product data to CSV format and close browser
+            convertToCSV(products)
+            await page.wait_for_timeout(5000)
+            await browser.close()
 
+# Execute asynchronous entry point
 asyncio.run(scrape())
